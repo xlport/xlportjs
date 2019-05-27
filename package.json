@@ -1,6 +1,6 @@
 {
   "name": "xlportjs",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,15 +12,20 @@
     "type": "git",
     "url": "git+https://github.com/xlport/xlportjs.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "xlPort",
+    "Excel import",
+    "Excel export"
+  ],
+  "author": "xlPort, Peter Albert",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/xlport/xlportjs/issues"
   },
   "homepage": "https://github.com/xlport/xlportjs#readme",
   "devDependencies": {
-    "typescript": "^3.4.5"
+    "typescript": "^3.4.5",
+    "@types/node": "^10.0.0"
   },
   "prettier": {
     "trailingComma": "all",
