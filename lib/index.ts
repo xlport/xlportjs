@@ -1,14 +1,14 @@
 import { put as putPromise } from 'request-promise';
 
-import { Response, put as putRequest } from 'request';
-import { readFile } from 'fs';
+import { put as putRequest } from 'request';
+import { readFile, ReadStream } from 'fs';
 import { extname } from 'path';
 import { promisify } from 'util';
 import { Stream } from 'stream';
 
 type xlPortJs = {
-  importFromFile: (fileLocation: string) => Promise<any>;
-  exportToFile: (data: Export) => Stream;
+  importFromFile: (file: string | Buffer) => Promise<any>;
+  exportToFile: (data: ExportBody) => Stream;
 };
 
 type ExcelFileExtension = 'xls' | 'xlsx' | 'xlsm' | 'xlsb';
@@ -25,16 +25,33 @@ type MimeTypes = Dictionary<ExcelFileExtension, ExcelMimeType>; //Record<ExcelFi
 
 export type ImportRequest = {
   properties: string[];
-  tables?: Record<string, string[]>[] | string[];
+  tables?: Record<string, string[]>[] | ['*'];
 };
 
 type ExportRawType = Boolean | string | number;
-export type ExportDetails = ExportRawType | Record<string, ExportRawType>; 
-export type ExportData = { [key in string]?: ExportDetails }
-export type Export = {
-  templateId: string,
-  data: ExportData
+export type ExportDetails = ExportRawType | Record<string, ExportRawType>;
+export type ExportData = { [key in string]?: ExportDetails };
+
+type ExportDetails = ExportRawType | Record<string, ExportRawType>;
+
+type ExportData = { [key in string]?: ExportDetails };
+
+interface TemplateIdBody {
+  templateId: string;
+  data: ExportData;
 }
+
+interface UrlBody {
+  templateUrl: string;
+  data: ExportData;
+}
+
+interface FileBody {
+  template: Buffer | ReadStream;
+  data: ExportData;
+}
+
+type ExportBody = FileBody | UrlBody | TemplateIdBody;
 
 export const defaultImportRequest: ImportRequest = {
   properties: ['*'],
@@ -60,15 +77,21 @@ const loadFile = async (path: string) => ({
 });
 
 export const xlPort = (apiKey: string): xlPortJs => ({
-  importFromFile: async (file: string, request: ImportRequest = defaultImportRequest) =>
+  importFromFile: async (file: string | Buffer, request: ImportRequest = defaultImportRequest) =>
     putPromise({
       url: 'https://xlport.compute.molnify.com/import',
       headers: {
-        Authorization: apiKey,
+        Authorization: 'xlport apikey ' + apiKey,
       },
       method: 'put',
       formData: {
-        file: await loadFile(file),
+        file:
+          typeof file === 'string'
+            ? await loadFile(file)
+            : {
+                value: file,
+                options: { filename: 'file.xlsx', contentType: excelDefaultMimeType },
+              },
         request: {
           value: Buffer.from(JSON.stringify(request)),
           options: {
@@ -77,20 +100,41 @@ export const xlPort = (apiKey: string): xlPortJs => ({
           },
         },
       },
-    }).then((response: Response) => {
-      const data = response.toJSON();
-      if (data) {
-        return data;
-      } else throw new Error('Response body is empty');
-    }),
-  exportToFile: (data: Export) =>
+    })
+      .then(JSON.parse)
+      .then((response) => {
+        if (response.status === 'error') throw Error(response.message);
+        if (!response) throw Error('Response body is empty');
+        return response;
+      }),
+  exportToFile: (body: ExportBody) =>
     putRequest({
       url: 'https://xlport.compute.molnify.com/export',
       headers: {
-        Authorization: apiKey,
-        'Content-Type': 'application/json',
+        Authorization: 'xlport apikey ' + apiKey,
       },
-      body: JSON.stringify(data),
+      body: 'templateId' in body ? JSON.stringify(body) : 'templateUrl' in body ? JSON.stringify(body) : null,
+      formData:
+        'template' in body
+          ? {
+              template: {
+                template: {
+                  value: body.template,
+                  options: {
+                    filename: 'template.xlsx',
+                    contentType: 'application/vnd.ms-excel',
+                  },
+                },
+              },
+              data: {
+                value: Buffer.from(JSON.stringify(body.data)),
+                options: {
+                  filename: 'data.json',
+                  contentType: 'application/json',
+                },
+              },
+            }
+          : undefined,
       encoding: null,
     }),
 });
