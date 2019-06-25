@@ -7,7 +7,7 @@ import { promisify } from 'util';
 import { Stream } from 'stream';
 
 type xlPortJs = {
-  importFromFile: (file: string | Buffer) => Promise<any>;
+  importFromFile: (file: string | Buffer) => Promise<ImportResponse>;
   exportToFile: (data: ExportBody) => Stream;
 };
 
@@ -53,6 +53,23 @@ interface FileBody {
 
 type ExportBody = FileBody | UrlBody | TemplateIdBody;
 
+type ImportResponse = ImportSuccess | ImportError;
+
+interface ImportError {
+  status: 'error';
+  message: string;
+}
+
+interface ImportSuccess {
+  status: 'success';
+  data: {
+    properties?: Record<string, ImportValue>;
+    tables?: Record<string, ImportValue>[];
+  };
+}
+
+type ImportValue = boolean | string | number;
+
 export const defaultImportRequest: ImportRequest = {
   properties: ['*'],
   tables: ['*'],
@@ -77,7 +94,7 @@ const loadFile = async (path: string) => ({
 });
 
 export const xlPort = (apiKey: string): xlPortJs => ({
-  importFromFile: async (file: string | Buffer, request: ImportRequest = defaultImportRequest) =>
+  importFromFile: async (file: string | Buffer, request: ImportRequest = defaultImportRequest): Promise<ImportResponse> =>
     putPromise({
       url: 'https://xlport.compute.molnify.com/import',
       headers: {
@@ -103,11 +120,10 @@ export const xlPort = (apiKey: string): xlPortJs => ({
     })
       .then(JSON.parse)
       .then((response) => {
-        if (response.status === 'error') throw Error(response.message);
         if (!response) throw Error('Response body is empty');
         return response;
       }),
-  exportToFile: (body: ExportBody) =>
+  exportToFile: (body: ExportBody): Stream =>
     putRequest({
       url: 'https://xlport.compute.molnify.com/export',
       headers: {
