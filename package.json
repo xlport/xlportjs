@@ -30,7 +30,8 @@
     "@types/request-promise": "4.1.44"
   },
   "dependencies": {
-    "request": "2.88.0"
+    "request": "2.88.0",
+    "request-promise": "^4.2.4"
   },
   "prettier": {
     "trailingComma": "all",
