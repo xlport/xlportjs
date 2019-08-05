@@ -28,13 +28,9 @@ export type ImportRequest = {
   tables?: Record<string, string[]>[] | ['*'];
 };
 
-type ExportRawType = Boolean | string | number;
-export type ExportDetails = ExportRawType | Record<string, ExportRawType>;
+export type ExportRawType = Boolean | string | number;
+export type ExportDetails = ExportRawType | Record<string, ExportRawType>[];
 export type ExportData = { [key in string]?: ExportDetails };
-
-type ExportDetails = ExportRawType | Record<string, ExportRawType>;
-
-type ExportData = { [key in string]?: ExportDetails };
 
 interface TemplateIdBody {
   templateId: string;
@@ -94,7 +90,10 @@ const loadFile = async (path: string) => ({
 });
 
 export const xlPort = (apiKey: string): xlPortJs => ({
-  importFromFile: async (file: string | Buffer, request: ImportRequest = defaultImportRequest): Promise<ImportResponse> =>
+  importFromFile: async (
+    file: string | Buffer,
+    request: ImportRequest = defaultImportRequest,
+  ): Promise<ImportResponse> =>
     putPromise({
       url: 'https://xlport.compute.molnify.com/import',
       headers: {
