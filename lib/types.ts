@@ -1,9 +1,8 @@
-import { Stream } from 'stream'
 import { ReadStream } from 'fs'
 
-export type XlPortClient = {
-  importFromFile: (file: string | Buffer) => Promise<ImportResponse>
-  exportToFile: (data: ExportBody) => Stream
+export type XlPortClientOptions = {
+  url?: string
+  apiKey: string
 }
 
 export type ExcelFileExtension = 'xls' | 'xlsx' | 'xlsm' | 'xlsb'
@@ -71,9 +70,4 @@ export const mimeTypes: MimeTypes = {
   xlsm: 'application/vnd.ms-excel.sheet.macroEnabled.12',
   xlsb: 'application/vnd.ms-excel.sheet.binary.macroEnabled.12',
   xls: 'application/vnd.ms-excel',
-}
-
-export type XlPortClientOptions = {
-  url: string
-  apiKey: string
 }
