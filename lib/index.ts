@@ -6,14 +6,14 @@ import { extname } from 'path'
 import { promisify } from 'util'
 import { Stream } from 'stream'
 
-type xlPortJs = {
+export type XlPortClient = {
   importFromFile: (file: string | Buffer) => Promise<ImportResponse>
   exportToFile: (data: ExportBody) => Stream
 }
 
-type ExcelFileExtension = 'xls' | 'xlsx' | 'xlsm' | 'xlsb'
-type ExcelDefaultMimeType = 'application/vnd.ms-excel'
-type ExcelMimeType =
+export type ExcelFileExtension = 'xls' | 'xlsx' | 'xlsm' | 'xlsb'
+export type ExcelDefaultMimeType = 'application/vnd.ms-excel'
+export type ExcelMimeType =
   | ExcelDefaultMimeType
   | 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   | 'application/vnd.ms-excel.sheet.macroEnabled.12'
@@ -21,7 +21,7 @@ type ExcelMimeType =
 
 const excelDefaultMimeType = 'application/vnd.ms-excel'
 type Dictionary<K extends string, T> = { [P in K]?: T }
-type MimeTypes = Dictionary<ExcelFileExtension, ExcelMimeType> //Record<ExcelFileExtension extends string, ExcelMimeType>;
+export type MimeTypes = Dictionary<ExcelFileExtension, ExcelMimeType> //Record<ExcelFileExtension extends string, ExcelMimeType>;
 
 export type ImportRequest = {
   properties: string[]
@@ -47,16 +47,16 @@ interface FileBody {
   data: ExportData
 }
 
-type ExportBody = FileBody | UrlBody | TemplateIdBody
+export type ExportBody = FileBody | UrlBody | TemplateIdBody
 
-type ImportResponse = ImportSuccess | ImportError
+export type ImportResponse = ImportSuccess | ImportError
 
-interface ImportError {
+export interface ImportError {
   status: 'error'
   message: string
 }
 
-interface ImportSuccess {
+export interface ImportSuccess {
   status: 'success'
   data: {
     properties?: Record<string, ImportValue>
@@ -64,14 +64,14 @@ interface ImportSuccess {
   }
 }
 
-type ImportValue = boolean | string | number
+export type ImportValue = boolean | string | number
 
 export const defaultImportRequest: ImportRequest = {
   properties: ['*'],
   tables: ['*'],
 }
 
-const mimeTypes: MimeTypes = {
+export const mimeTypes: MimeTypes = {
   xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   xlsm: 'application/vnd.ms-excel.sheet.macroEnabled.12',
   xlsb: 'application/vnd.ms-excel.sheet.binary.macroEnabled.12',
@@ -89,7 +89,7 @@ const loadFile = async (path: string) => ({
   },
 })
 
-export const xlPort = (apiKey: string): xlPortJs => ({
+export const xlPort = (apiKey: string): XlPortClient => ({
   importFromFile: async (
     file: string | Buffer,
     request: ImportRequest = defaultImportRequest,

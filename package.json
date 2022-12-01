@@ -1,6 +1,6 @@
 {
   "name": "xlportjs",
-  "version": "0.0.2",
+  "version": "0.0.7",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -23,7 +23,7 @@
   "bugs": {
     "url": "https://github.com/xlport/xlportjs/issues"
   },
-  "homepage": "https://github.com/xlport/xlportjs#readme",
+  "homepage": "https://xlport.io",
   "devDependencies": {
     "typescript": "^4.9.3",
     "@types/node": "^10.0.0",
