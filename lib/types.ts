@@ -22,7 +22,7 @@ export type ImportRequest = {
   tables?: Record<string, string[]>[] | ['*']
 }
 
-export type ExportRawType = Boolean | string | number
+export type ExportRawType = boolean | string | number
 export type ExportDetails = ExportRawType | Record<string, ExportRawType>[]
 export type ExportData = { [key in string]?: ExportDetails }
 
