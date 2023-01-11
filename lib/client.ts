@@ -4,19 +4,34 @@ import { readFile } from 'fs'
 import { extname } from 'path'
 import { promisify } from 'util'
 import { Stream } from 'stream'
-import type {
-  XlPortClientOptions,
-  ExcelMimeType,
-  ExcelFileExtension,
-  ExportBody,
-  ImportRequest,
-  ImportResponse,
-} from './types'
-import { mimeTypes, excelDefaultMimeType, defaultImportRequest } from './types'
+import * as Import from './import.types'
+import * as Export from './export.types'
+
+export type ClientOptions = {
+  url?: string
+  apiKey: string
+}
+
+export type ExcelFileExtension = 'xls' | 'xlsx' | 'xlsm' | 'xlsb'
+export type ExcelDefaultMimeType = 'application/vnd.ms-excel'
+export type ExcelMimeType =
+  | ExcelDefaultMimeType
+  | 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  | 'application/vnd.ms-excel.sheet.macroEnabled.12'
+  | 'application/vnd.ms-excel.sheet.binary.macroEnabled.12'
+
+export const excelDefaultMimeType = 'application/vnd.ms-excel'
+export const mimeTypes: MimeTypes = {
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  xlsm: 'application/vnd.ms-excel.sheet.macroEnabled.12',
+  xlsb: 'application/vnd.ms-excel.sheet.binary.macroEnabled.12',
+  xls: 'application/vnd.ms-excel',
+}
+export type MimeTypes = Record<ExcelFileExtension, ExcelMimeType>
 
 export class XlPort {
-  private config: Required<XlPortClientOptions>
-  constructor(config: XlPortClientOptions) {
+  private config: Required<ClientOptions>
+  constructor(config: ClientOptions) {
     this.config = {
       url: config.url ? config.url.replace(/\/$/, '') : 'https://api.xlport.io',
       apiKey: config.apiKey,
@@ -24,8 +39,8 @@ export class XlPort {
   }
   public async importFromFile(
     file: string | Buffer,
-    request: ImportRequest = defaultImportRequest,
-  ): Promise<ImportResponse> {
+    request: Import.Request = Import.defaultRequest,
+  ): Promise<Import.Response> {
     return putPromise({
       url: `${this.config.url}/import`,
       headers: {
@@ -55,7 +70,7 @@ export class XlPort {
         return response
       })
   }
-  public exportToFile(body: ExportBody): Stream {
+  public exportToFile(body: Export.Body): Stream {
     return putRequest({
       url: `${this.config.url}/export`,
       headers: {
