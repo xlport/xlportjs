@@ -4,8 +4,8 @@ import { readFile } from 'fs'
 import { extname } from 'path'
 import { promisify } from 'util'
 import { Stream } from 'stream'
-import * as Import from './import.types'
-import * as Export from './export.types'
+import { Import } from './import.types'
+import { Export } from './export.types'
 
 export type ClientOptions = {
   url?: string
