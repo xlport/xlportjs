@@ -14,10 +14,13 @@ export interface Error {
 export interface Success {
   status: 'success'
   data: {
-    properties?: Record<string, Shared.Scalar>
+    properties?: Record<string, Property>
     tables?: Record<string, Shared.Scalar>[]
   }
 }
+
+export type Property = Shared.Scalar | SheetData
+export type SheetData = Record<string, Shared.Scalar>
 
 export const defaultRequest: Request = {
   properties: ['*'],
