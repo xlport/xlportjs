@@ -33,7 +33,7 @@ export class XlPort {
   private config: Required<ClientOptions>
   constructor(config: ClientOptions) {
     this.config = {
-      url: config.url ? config.url.replace(/\/$/, '') : 'https://api.xlport.io',
+      url: config.url ? config.url.replace(/\/$/, '') : 'https://xlport.compute.molnify.com',
       apiKey: config.apiKey,
     }
   }
