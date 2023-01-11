@@ -4,6 +4,11 @@ export type Request = {
   tables?: Record<string, string[]>[] | ['*']
 }
 
+export const defaultRequest: Request = {
+  properties: ['*'],
+  tables: ['*'],
+}
+
 export type Response = Success | Error
 
 export interface Error {
@@ -13,16 +18,14 @@ export interface Error {
 
 export interface Success {
   status: 'success'
-  data: {
-    properties?: Record<string, Property>
-    tables?: Record<string, Shared.Scalar>[]
-  }
+  data: ImportData
 }
 
-export type Property = Shared.Scalar | SheetData
-export type SheetData = Record<string, Shared.Scalar>
-
-export const defaultRequest: Request = {
-  properties: ['*'],
-  tables: ['*'],
+export type ImportData = {
+  properties?: Record<string, Property>
+  tables?: Record<string, ImportTable | SheetTables>
 }
+export type Property = Shared.Scalar | SheetProperties
+export type SheetProperties = Record<string, Shared.Scalar>
+export type ImportTable = Record<string, Shared.Scalar>[]
+export type SheetTables = Record<string, ImportTable>
