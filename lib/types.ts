@@ -22,23 +22,49 @@ export type ImportRequest = {
   tables?: Record<string, string[]>[] | ['*']
 }
 
-export type ExportRawType = boolean | string | number
-export type ExportDetails = ExportRawType | Record<string, ExportRawType>[]
+export type ExportNamedRange = ExportScalar | ExportScalarWithOptions
+export type ExportScalar = boolean | string | number
+export type ExportScalarWithOptions = { data: ExportScalar; format?: string; indent?: IndentLevel }
+export type IndentLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20
+export type ExportTable = ExportTablePlain | ExportTableWithColumnModifications
+export type ExportTablePlain = Record<string, ExportNamedRange>[]
+export type ExportTableWithColumnModifications = {
+  columns: ExportTableColumn[]
+  data: ExportTablePlain
+}
+export type ExportTableColumn = {
+  name: string
+  fromTemplateColumn: string
+  format?: string
+}
+
+export type ExportDetails = ExportNamedRange | ExportTable
+export type ExportDataWithSheets = ExportData & { sheets?: ExportSheet[] }
 export type ExportData = { [key in string]?: ExportDetails }
+
+export type ExportSheet = {
+  name: string
+  fromTemplateSheet: string
+  color?: HexColor
+  data: ExportData
+}
+
+export type HexColor = `#${HexValue}${HexValue}${HexValue}`
+type HexValue = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | 'A' | 'B' | 'C' | 'D' | 'E' | 'F'
 
 interface TemplateIdBody {
   templateId: string
-  data: ExportData
+  data: ExportDataWithSheets
 }
 
 interface UrlBody {
   templateUrl: string
-  data: ExportData
+  data: ExportDataWithSheets
 }
 
 interface FileBody {
   template: Buffer | ReadStream
-  data: ExportData
+  data: ExportDataWithSheets
 }
 
 export type ExportBody = FileBody | UrlBody | TemplateIdBody
