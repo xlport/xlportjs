@@ -29,7 +29,7 @@ export const mimeTypes: MimeTypes = {
 }
 export type MimeTypes = Record<ExcelFileExtension, ExcelMimeType>
 
-export class XlPort {
+export class Client {
   private config: Required<ClientOptions>
   constructor(config: ClientOptions) {
     this.config = {
