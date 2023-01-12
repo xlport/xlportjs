@@ -1,6 +1,6 @@
 {
   "name": "xlport",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "description": "",
   "main": "dist/lib/index.js",
   "types": "dist/lib/index.d.ts",
@@ -26,13 +26,10 @@
   "homepage": "https://xlport.io",
   "devDependencies": {
     "typescript": "^4.9.3",
-    "@types/node": "^10.0.0",
-    "@types/request": "2.48.8",
-    "@types/request-promise": "4.1.48"
+    "@types/node": "14.14.31"
   },
   "dependencies": {
-    "request": "2.88.0",
-    "request-promise": "^4.2.4"
+    "axios": "1.2.2"
   },
   "prettier": {
     "trailingComma": "all",
