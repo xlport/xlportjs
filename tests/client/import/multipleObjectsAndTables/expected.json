@@ -1,4 +1,21 @@
 {
+  "properties": {
+    "Boolean": true,
+    "CompanyBoolean": false,
+    "CompanyFloat": 2141.4,
+    "CompanyId": "cid1",
+    "CompanyInteger": 252454,
+    "CompanyLabel": "Company Name",
+    "CompanyLastUpdated": "2019-02-02T00:00:00.000Z",
+    "Float": -143242.25,
+    "HierarchyId": "hid1",
+    "HierarchyLabel": "Hierarchy Name",
+    "Integer": 114325352,
+    "LastUpdated": "2019-01-01T00:00:00.000Z",
+    "ProjectId": "pid1",
+    "ProjectLabel": "Project Name",
+    "RootId": "elid1"
+  },
   "tables": {
     "Initiatives": [
       {
@@ -33,6 +50,34 @@
         "Date": "2020-01-01T00:00:00.000Z",
         "Integer": 1324275242,
         "Calculated column": 542.64
+      }
+    ],
+    "Status": [
+      {
+        "Id": "uuidStatus1",
+        "Label": "On track"
+      },
+      {
+        "Id": "uuidStatus2",
+        "Label": "Some progress"
+      },
+      {
+        "Id": "uuidStatus3",
+        "Label": "Delayed"
+      }
+    ],
+    "Persons": [
+      {
+        "Id": "pid1",
+        "LastName": "Bolle"
+      },
+      {
+        "Id": "pid2",
+        "LastName": "Zwille"
+      },
+      {
+        "Id": "pid3",
+        "LastName": "Ralle"
       }
     ]
   }

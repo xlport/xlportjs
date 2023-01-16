@@ -1,0 +1,15 @@
+{
+  "tables": {
+    "Initiatives": [
+      "Id",
+      "Name",
+      "StatusId",
+      "SavingsPotential",
+      "Achievement",
+      "IsComplete",
+      "Date",
+      "Integer",
+      "Calculated column"
+    ]
+  }
+}

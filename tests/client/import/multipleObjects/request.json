@@ -1,0 +1,20 @@
+{
+  "properties": [
+    "Boolean",
+    "CompanyBoolean",
+    "CompanyFloat",
+    "CompanyId",
+    "CompanyInteger",
+    "CompanyLabel",
+    "CompanyLastUpdated",
+    "CompnayId",
+    "Float",
+    "HierarchyId",
+    "HierarchyLabel",
+    "Integer",
+    "LastUpdated",
+    "ProjectId",
+    "ProjectLabel",
+    "RootId"
+  ]
+}
