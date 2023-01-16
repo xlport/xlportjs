@@ -1,7 +1,0 @@
-{
-  "apikey": "pass123",
-  "templateId": "DAYS calculation bug/template.xlsx",
-  "data": {
-    "Staffing": [{ "Utilization": 7 }]
-  }
-}
