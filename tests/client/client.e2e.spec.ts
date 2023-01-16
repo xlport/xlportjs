@@ -5,6 +5,7 @@ import * as dotenv from 'dotenv'
 // import { Stream } from 'stream'
 
 import * as simpleExport from './export/simple-export/request.json'
+import { createReadStream } from 'fs'
 
 // const writeToFile = (stream: Stream, path: string): Promise<void> => {
 //   const writeStream = stream.pipe(createWriteStream(path))
@@ -33,6 +34,15 @@ describe('Client', () => {
     const client = getClient()
     const file = await client.exportToFile(simpleExport)
     expect(file).toBeDefined()
+  })
+
+  it('should be able to upload a template', async () => {
+    const client = getClient()
+    const result = await client.exportToFile({
+      template: createReadStream('./tests/client/export/simple-export/template.xlsx'),
+      data: { test: 'Test' },
+    })
+    expect(result).toBeDefined()
   })
   // it('should be able to download a file and match it to the expected', async () => {
   //   const file = createReadStream('./tests/client/export/simple-export/expected.xlsx')

@@ -116,14 +116,12 @@ export class Client {
   //   'templateId' in body || 'templateUrl' in body
   //     ? body
   //     : toFormData({
-  //         template: {
   //           template: {
   //             value: body.template,
   //             options: {
   //               filename: 'template.xlsx',
   //               contentType: 'application/vnd.ms-excel',
   //             },
-  //           },
   //         },
   //         data: {
   //           value: Buffer.from(JSON.stringify(body.data)),
@@ -148,12 +146,10 @@ export class Client {
         'template' in body
           ? {
               template: {
-                template: {
-                  value: body.template,
-                  options: {
-                    filename: 'template.xlsx',
-                    contentType: 'application/vnd.ms-excel',
-                  },
+                value: body.template,
+                options: {
+                  filename: 'template.xlsx',
+                  contentType: 'application/vnd.ms-excel',
                 },
               },
               data: {
