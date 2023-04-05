@@ -26,8 +26,8 @@ export namespace Import {
     properties?: Record<string, Property>
     tables?: Record<string, Table | SheetTables>
   }
-  export type Property = Shared.Scalar | SheetProperties
-  export type SheetProperties = Record<string, Shared.Scalar>
-  export type Table = Record<string, Shared.Scalar>[]
+  export type Property = Shared.Primitives | SheetProperties
+  export type SheetProperties = Record<string, Shared.Primitives>
+  export type Table = Record<string, Shared.Primitives>[]
   export type SheetTables = Record<string, Table>
 }

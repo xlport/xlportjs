@@ -1,1 +1,1 @@
-export type Scalar = boolean | string | number | null
+export type Primitives = boolean | string | number | null

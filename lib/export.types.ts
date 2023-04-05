@@ -8,6 +8,8 @@ export namespace Export {
     data: DataWithSheets
   }
 
+  export const bodyHasFile = (body: Body): body is FileBody => 'template' in body
+
   export type UrlBody = {
     templateUrl: string
     data: DataWithSheets
@@ -19,8 +21,8 @@ export namespace Export {
   }
 
   export type NamedRange = Value
-  export type Value = Shared.Scalar | ScalarWithOptions
-  export type ScalarWithOptions = { data: Shared.Scalar; format?: string; indent?: IndentLevel }
+  export type Value = Shared.Primitives | ScalarWithOptions
+  export type ScalarWithOptions = { data: Shared.Primitives; format?: string; indent?: IndentLevel }
   export type IndentLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20
   export type Table = TableData | TableWithColumnModifications
   export type TableData = Record<string, Value>[]

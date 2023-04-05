@@ -136,32 +136,32 @@ export class Client {
   //   return response.data as Stream
   // })
   public exportToFile(body: Export.Body): Stream {
+    const bodyHasFile = Export.bodyHasFile(body)
     return put({
       url: `${this.config.url}/export`,
       headers: {
         Authorization: 'xlport apikey ' + this.config.apiKey,
+        'Content-Type': bodyHasFile ? 'multipart/form-data' : 'application/json',
       },
-      body: 'templateId' in body ? JSON.stringify(body) : 'templateUrl' in body ? JSON.stringify(body) : null,
-      formData:
-        'template' in body
-          ? {
-              template: {
-                value: body.template,
-                options: {
-                  filename: 'template.xlsx',
-                  contentType: 'application/vnd.ms-excel',
-                },
+      body: bodyHasFile ? null : JSON.stringify(body),
+      formData: bodyHasFile
+        ? {
+            template: {
+              value: body.template,
+              options: {
+                filename: 'template.xlsx',
+                contentType: 'application/vnd.ms-excel',
               },
-              data: {
-                value: Buffer.from(JSON.stringify(body.data)),
-                options: {
-                  filename: 'data.json',
-                  contentType: 'application/json',
-                },
+            },
+            data: {
+              value: Buffer.from(JSON.stringify(body.data)),
+              options: {
+                filename: 'data.json',
+                contentType: 'application/json',
               },
-            }
-          : undefined,
-      encoding: null,
+            },
+          }
+        : undefined,
     })
   }
 
