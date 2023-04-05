@@ -70,6 +70,7 @@
 				"fromTemplateSheet": "Project",
 				"tabColor": "#00FF00",
 				"data": {
+					"ProjectLabel":"Label 2",
 					"dummy": "dummy value"
 				}
 			},
@@ -78,6 +79,7 @@
 				"fromTemplateSheet": "Project",
 				"tabColor": "#0000FF",
 				"data": {
+					"ProjectLabel":"Label X",
 					"dummy": "dummy value"
 				}
 			}
