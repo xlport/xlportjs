@@ -79,7 +79,7 @@ describe('Client', () => {
 
   it('should import data - 1object', async () => {
     const client = getClient()
-    const result = await client.importFromFile('./tests/client/import/1object/Source.xlsx')
+    const result = await client.importFromFile('./tests/client/import/1object/workbook.xlsx')
     expect(result.status).toBe('success')
     if (result.status === 'success') {
       expect(result.data.properties).toEqual(import1Object.properties)
@@ -88,7 +88,7 @@ describe('Client', () => {
 
   it('should import data - 1table', async () => {
     const client = getClient()
-    const result = await client.importFromFile('./tests/client/import/1table/Source.xlsx')
+    const result = await client.importFromFile('./tests/client/import/1table/workbook.xlsx')
     expect(result.status).toBe('success')
     if (result.status === 'success') {
       expect(result.data.tables).toEqual(import1Table.tables)
@@ -96,7 +96,7 @@ describe('Client', () => {
   })
   it('should import data - large table', async () => {
     const client = getClient()
-    const result = await client.importFromFile('./tests/client/import/1table-10col-100rows/Source.xlsx')
+    const result = await client.importFromFile('./tests/client/import/1table-10col-100rows/workbook.xlsx')
     expect(result.status).toBe('success')
     if (result.status === 'success') {
       expect(roundNumbers(result.data.tables)).toEqual(roundNumbers(importLargeTable.tables))
@@ -104,7 +104,7 @@ describe('Client', () => {
   })
   it('should import data - multipleObjects', async () => {
     const client = getClient()
-    const result = await client.importFromFile('./tests/client/import/multipleObjects/Source.xlsx')
+    const result = await client.importFromFile('./tests/client/import/multipleObjects/workbook.xlsx')
     expect(result.status).toBe('success')
     if (result.status === 'success') {
       expect(result.data.properties).toEqual(importMultipleObjects.properties)
@@ -112,7 +112,7 @@ describe('Client', () => {
   })
   it('should import data - multipleObjectsAndTables', async () => {
     const client = getClient()
-    const result = await client.importFromFile('./tests/client/import/multipleObjectsAndTables/Source.xlsx')
+    const result = await client.importFromFile('./tests/client/import/multipleObjectsAndTables/workbook.xlsx')
     expect(result.status).toBe('success')
     if (result.status === 'success') {
       expect(result.data.properties).toEqual(importMultipleObjectsAndTables.properties)

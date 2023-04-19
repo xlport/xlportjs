@@ -1,13 +1,15 @@
 // import { promisify } from 'util'
-// import { readFile } from 'fs'
-
 import { createReadStream } from 'fs'
-import FormData from 'form-data'
+import https from 'https'
+
 import Axios, { AxiosInstance, toFormData } from 'axios'
+// import { FormData, File } from 'formdata-node'
+// import { fileFromPath } from 'formdata-node/file-from-path'
 import { extname } from 'path'
 import { Stream } from 'stream'
 import { Import } from './import.types'
 import { Export } from './export.types'
+import FormData from 'form-data'
 
 export type ClientOptions = {
   url?: string
@@ -44,6 +46,15 @@ export class Client {
       apiKey: config.apiKey,
     }
     this.axios = Axios.create({
+      httpsAgent: new https.Agent({
+        rejectUnauthorized: false, // set to false
+      }),
+      proxy: {
+        host: '127.0.0.1',
+        port: 8080,
+        protocol: 'https',
+      },
+
       headers: {
         Authorization: this.authHeader,
       },
@@ -57,29 +68,40 @@ export class Client {
     if (typeof file === 'string') {
       try {
         const options = { contentType: this.getExcelMimeType(file) }
-        formData.append('file.xlsx', createReadStream(file), options)
+        formData.append('file', createReadStream(file), options)
       } catch (error) {
         console.error(error)
         throw error
       }
     } else {
-      formData.append('file.xlsx', file, { contentType: excelDefaultMimeType })
+      formData.append('file', file, { contentType: excelDefaultMimeType })
     }
     formData.append('request', JSON.stringify(request))
 
-    return this.axios
-      .put(`${this.config.url}/import`, formData, {
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'multipart/form-data',
-          ...formData.getHeaders(),
-        },
-      })
-      .then((response) => JSON.parse(response.data))
-      .then((response) => {
-        if (!response) throw Error('Response body is empty')
-        return response
-      })
+    return (
+      this.axios
+        .put(`${this.config.url}/import`, formData, {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'multipart/form-data',
+            ...formData.getHeaders(),
+          },
+        })
+        .then((response) => {
+          console.log(response.data)
+          return response
+        })
+
+        // .then((response) => {
+        //   console.log(response.data)
+        //   return response
+        // })
+        // .then((response) => JSON.parse(response.data))
+        .then((response) => {
+          if (!response.data) throw Error('Response body is empty')
+          return response.data
+        })
+    )
     // return putPromise({
     //   url: `${this.config.url}/import`,
     //   headers: {
