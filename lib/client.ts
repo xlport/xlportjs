@@ -1,10 +1,7 @@
-// import { promisify } from 'util'
 import { createReadStream } from 'fs'
-import https from 'https'
+// import https from 'https'
 
 import Axios, { AxiosInstance, toFormData } from 'axios'
-// import { FormData, File } from 'formdata-node'
-// import { fileFromPath } from 'formdata-node/file-from-path'
 import { extname } from 'path'
 import { Stream } from 'stream'
 import { Import } from './import.types'
@@ -46,14 +43,14 @@ export class Client {
       apiKey: config.apiKey,
     }
     this.axios = Axios.create({
-      httpsAgent: new https.Agent({
-        rejectUnauthorized: false, // set to false
-      }),
-      proxy: {
-        host: '127.0.0.1',
-        port: 8080,
-        protocol: 'https',
-      },
+      // httpsAgent: new https.Agent({
+      //   rejectUnauthorized: false, // set to false
+      // }),
+      // proxy: {
+      //   host: '127.0.0.1',
+      //   port: 8080,
+      //   protocol: 'https',
+      // },
 
       headers: {
         Authorization: this.authHeader,
@@ -78,58 +75,18 @@ export class Client {
     }
     formData.append('request', JSON.stringify(request))
 
-    return (
-      this.axios
-        .put(`${this.config.url}/import`, formData, {
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'multipart/form-data',
-            ...formData.getHeaders(),
-          },
-        })
-        .then((response) => {
-          console.log(response.data)
-          return response
-        })
-
-        // .then((response) => {
-        //   console.log(response.data)
-        //   return response
-        // })
-        // .then((response) => JSON.parse(response.data))
-        .then((response) => {
-          if (!response.data) throw Error('Response body is empty')
-          return response.data
-        })
-    )
-    // return putPromise({
-    //   url: `${this.config.url}/import`,
-    //   headers: {
-    //     Authorization: 'xlport apikey ' + this.config.apiKey,
-    //   },
-    //   method: 'put',
-    //   formData: {
-    //     file:
-    //       typeof file === 'string'
-    //         ? await this.loadFile(file)
-    //         : {
-    //             value: file,
-    //             options: { filename: 'file.xlsx', contentType: excelDefaultMimeType },
-    //           },
-    //     request: {
-    //       value: Buffer.from(JSON.stringify(request)),
-    //       options: {
-    //         filename: 'request.json',
-    //         contentType: 'application/json',
-    //       },
-    //     },
-    //   },
-    // })
-    //   .then(JSON.parse)
-    //   .then((response) => {
-    //     if (!response) throw Error('Response body is empty')
-    //     return response
-    //   })
+    return this.axios
+      .put(`${this.config.url}/import`, formData, {
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'multipart/form-data',
+          ...formData.getHeaders(),
+        },
+      })
+      .then((response) => {
+        if (!response.data) throw Error('Response body is empty')
+        return response.data
+      })
   }
   public exportToFile(body: Export.Body): Promise<Stream> {
     let data =
@@ -155,47 +112,9 @@ export class Client {
       if (response.status !== 200) throw Error(response.statusText)
       return response.data as Stream
     })
-    // public exportToFile(body: Export.Body): Stream {
-    //   const bodyHasFile = Export.bodyHasFile(body)
-    //   return put({
-    //     url: `${this.config.url}/export`,
-    //     headers: {
-    //       Authorization: 'xlport apikey ' + this.config.apiKey,
-    //       'Content-Type': bodyHasFile ? 'multipart/form-data' : 'application/json',
-    //     },
-    //     body: bodyHasFile ? null : JSON.stringify(body),
-    //     formData: bodyHasFile
-    //       ? {
-    //           template: {
-    //             value: body.template,
-    //             options: {
-    //               filename: 'template.xlsx',
-    //               contentType: 'application/vnd.ms-excel',
-    //             },
-    //           },
-    //           data: {
-    //             value: Buffer.from(JSON.stringify(body.data)),
-    //             options: {
-    //               filename: 'data.json',
-    //               contentType: 'application/json',
-    //             },
-    //           },
-    //         }
-    //       : undefined,
-    //   })
   }
 
   private getExcelMimeType(path: string): ExcelMimeType {
     return mimeTypes[<ExcelFileExtension>extname(path)] || excelDefaultMimeType
   }
-
-  // private async loadFile(path: string) {
-  //   return {
-  //     value: await promisify(readFile)(path),
-  //     options: {
-  //       filename: 'file.xlsx',
-  //       contentType: this.getExcelMimeType(path),
-  //     },
-  //   }
-  // }
 }
