@@ -60,6 +60,7 @@ export class Client {
   public async importFromFile(
     file: string | Buffer,
     request: Import.Request = Import.defaultRequest,
+    filename: string = 'file.xlsx',
   ): Promise<Import.Response> {
     const formData = new FormData()
     if (typeof file === 'string') {
@@ -71,7 +72,7 @@ export class Client {
         throw error
       }
     } else {
-      formData.append('file', file, { contentType: excelDefaultMimeType })
+      formData.append('file', file, { contentType: this.getExcelMimeType(filename), filename })
     }
     formData.append('request', JSON.stringify(request))
 
