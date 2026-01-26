@@ -1,4 +1,5 @@
 import { createReadStream, readFileSync } from 'fs'
+import { readFile } from 'fs/promises'
 // import https from 'https'
 
 import Axios, { AxiosInstance, AxiosError, toFormData } from 'axios'
@@ -78,11 +79,9 @@ export class Client {
     request: Import.Request = Import.defaultRequest,
     filename: string = 'file.xlsx',
   ): Promise<Import.Response> {
-    // Convert file path to buffer for local processing
-    const fileBuffer = typeof file === 'string' ? readFileSync(file) : file
-
     // If localOnly mode is enabled, skip the server entirely
     if (this.config.localOnly) {
+      const fileBuffer = typeof file === 'string' ? readFileSync(file) : file
       return localImport(fileBuffer, request)
     }
 
@@ -114,6 +113,8 @@ export class Client {
       // Check if this is a network error and fallback is enabled
       if (this.config.localFallback && this.isNetworkError(error)) {
         console.warn('xlport server unreachable, falling back to local ExcelJS import')
+        // Read file asynchronously only when fallback is triggered
+        const fileBuffer = typeof file === 'string' ? await readFile(file) : file
         return localImport(fileBuffer, request)
       }
       throw error
