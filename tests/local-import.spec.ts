@@ -257,6 +257,8 @@ describe('Local Import (ExcelJS fallback)', () => {
         url: 'http://127.0.0.1:1', // Port 1 is typically not accessible
         localFallback: true,
       })
+      // Set short timeout to prevent lingering connections
+      client.axios.defaults.timeout = 1000
 
       const result = await client.importFromFile('./tests/client/import/1table/workbook.xlsx')
 
@@ -273,6 +275,8 @@ describe('Local Import (ExcelJS fallback)', () => {
         url: 'http://127.0.0.1:1',
         localFallback: false,
       })
+      // Set short timeout to prevent lingering connections
+      client.axios.defaults.timeout = 1000
 
       // Should throw because the server is unreachable and fallback is disabled
       await expect(client.importFromFile('./tests/client/import/1table/workbook.xlsx')).rejects.toThrow()
@@ -285,6 +289,8 @@ describe('Local Import (ExcelJS fallback)', () => {
         url: 'http://127.0.0.1:1', // Unreachable URL
         // localFallback not specified - should default to true
       })
+      // Set short timeout to prevent lingering connections
+      client.axios.defaults.timeout = 1000
 
       // This should succeed because localFallback defaults to true
       const result = await client.importFromFile('./tests/client/import/1table/workbook.xlsx')
