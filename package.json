@@ -40,7 +40,8 @@
   },
   "dependencies": {
     "form-data": "^4.0.0",
-    "axios": "^1.4.0"
+    "axios": "^1.4.0",
+    "exceljs": "^4.4.0"
   },
   "prettier": {
     "trailingComma": "all",

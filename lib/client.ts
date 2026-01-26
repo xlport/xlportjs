@@ -1,16 +1,29 @@
-import { createReadStream } from 'fs'
+import { createReadStream, readFileSync } from 'fs'
 // import https from 'https'
 
-import Axios, { AxiosInstance, toFormData } from 'axios'
+import Axios, { AxiosInstance, AxiosError, toFormData } from 'axios'
 import { extname } from 'path'
 import { Stream } from 'stream'
 import { Import } from './import.types'
 import { Export } from './export.types'
 import FormData from 'form-data'
+import { localImport } from './local-import'
 
 export type ClientOptions = {
   url?: string
   apiKey: string
+  /**
+   * Enable local fallback using ExcelJS when the xlport server cannot be reached.
+   * Useful for sandboxed environments without network access.
+   * @default true
+   */
+  localFallback?: boolean
+  /**
+   * Skip the xlport server entirely and use local parsing only.
+   * When true, the apiKey is not required.
+   * @default false
+   */
+  localOnly?: boolean
 }
 
 export type ExcelFileExtension = 'xls' | 'xlsx' | 'xlsm' | 'xlsb'
@@ -37,10 +50,13 @@ export class Client {
   }
   public axios: AxiosInstance
   constructor(config: ClientOptions) {
-    if (config.apiKey === undefined) throw Error('API Key is undefined')
+    const localOnly = config.localOnly ?? false
+    if (!localOnly && config.apiKey === undefined) throw Error('API Key is undefined')
     this.config = {
       url: config.url ? config.url.replace(/\/$/, '') : 'https://xlport.compute.molnify.com',
-      apiKey: config.apiKey,
+      apiKey: config.apiKey ?? '',
+      localFallback: config.localFallback ?? true,
+      localOnly,
     }
     this.axios = Axios.create({
       // httpsAgent: new https.Agent({
@@ -62,6 +78,14 @@ export class Client {
     request: Import.Request = Import.defaultRequest,
     filename: string = 'file.xlsx',
   ): Promise<Import.Response> {
+    // Convert file path to buffer for local processing
+    const fileBuffer = typeof file === 'string' ? readFileSync(file) : file
+
+    // If localOnly mode is enabled, skip the server entirely
+    if (this.config.localOnly) {
+      return localImport(fileBuffer, request)
+    }
+
     const formData = new FormData()
     if (typeof file === 'string') {
       try {
@@ -76,18 +100,42 @@ export class Client {
     }
     formData.append('request', JSON.stringify(request))
 
-    return this.axios
-      .put(`${this.config.url}/import`, formData, {
+    try {
+      const response = await this.axios.put(`${this.config.url}/import`, formData, {
         headers: {
           Accept: 'application/json',
           'Content-Type': 'multipart/form-data',
           ...formData.getHeaders(),
         },
       })
-      .then((response) => {
-        if (!response.data) throw Error('Response body is empty')
-        return response.data
-      })
+      if (!response.data) throw Error('Response body is empty')
+      return response.data
+    } catch (error) {
+      // Check if this is a network error and fallback is enabled
+      if (this.config.localFallback && this.isNetworkError(error)) {
+        console.warn('xlport server unreachable, falling back to local ExcelJS import')
+        return localImport(fileBuffer, request)
+      }
+      throw error
+    }
+  }
+
+  /**
+   * Check if an error is a network-related error (connection refused, timeout, etc.)
+   */
+  private isNetworkError(error: unknown): boolean {
+    if (error instanceof AxiosError) {
+      // Network errors (no response received)
+      if (!error.response) {
+        return true
+      }
+      // Server errors that indicate the server is not available
+      const status = error.response.status
+      if (status === 502 || status === 503 || status === 504) {
+        return true
+      }
+    }
+    return false
   }
   public exportToFile(body: Export.Body): Promise<Stream> {
     let data =
