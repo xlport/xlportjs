@@ -1,6 +1,7 @@
 import { createReadStream } from 'fs'
 import { readFile } from 'fs/promises'
-// import https from 'https'
+import http from 'http'
+import https from 'https'
 
 import Axios, { AxiosInstance, AxiosError, toFormData } from 'axios'
 import { extname } from 'path'
@@ -68,6 +69,9 @@ export class Client {
     return 'xlport apikey ' + this.config.apiKey
   }
   public axios: AxiosInstance
+  private httpAgent: http.Agent
+  private httpsAgent: https.Agent
+
   constructor(config: ClientOptions) {
     const localOnly = config.localOnly ?? false
     if (!localOnly && !config.apiKey) throw Error('API Key is required when localOnly is false')
@@ -77,20 +81,32 @@ export class Client {
       localFallback: config.localFallback ?? true,
       localOnly,
     }
-    this.axios = Axios.create({
-      // httpsAgent: new https.Agent({
-      //   rejectUnauthorized: false, // set to false
-      // }),
-      // proxy: {
-      //   host: '127.0.0.1',
-      //   port: 8080,
-      //   protocol: 'https',
-      // },
 
+    // Create agents for proper connection management
+    this.httpAgent = new http.Agent({ keepAlive: false })
+    this.httpsAgent = new https.Agent({ keepAlive: false })
+
+    this.axios = Axios.create({
+      httpAgent: this.httpAgent,
+      httpsAgent: this.httpsAgent,
       headers: {
         Authorization: this.authHeader,
       },
     })
+  }
+
+  /**
+   * Destroy the client and close all connections.
+   * Call this when you're done using the client to prevent open handles.
+   */
+  public destroy(): void {
+    // Clear interceptors
+    this.axios.interceptors.request.clear?.()
+    this.axios.interceptors.response.clear?.()
+
+    // Destroy the agents to close all sockets
+    this.httpAgent.destroy()
+    this.httpsAgent.destroy()
   }
   public async importFromFile(
     file: string | Buffer,

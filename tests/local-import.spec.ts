@@ -85,11 +85,9 @@ describe('Local Import (ExcelJS fallback)', () => {
 
   // Cleanup after all tests to prevent open handle warnings
   afterAll(async () => {
-    // Clear any pending axios connections by removing interceptors and aborting
+    // Destroy all client instances to close connections
     for (const client of clients) {
-      // Clear axios request/response interceptors
-      client.axios.interceptors.request.clear?.()
-      client.axios.interceptors.response.clear?.()
+      client.destroy()
     }
     clients.length = 0
 

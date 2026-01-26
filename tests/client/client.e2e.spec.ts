@@ -66,8 +66,7 @@ describe('Client', () => {
   // Cleanup after all tests to prevent open handle warnings
   afterAll(async () => {
     for (const client of clients) {
-      client.axios.interceptors.request.clear?.()
-      client.axios.interceptors.response.clear?.()
+      client.destroy()
     }
     clients.length = 0
     await new Promise((resolve) => setTimeout(resolve, 100))
