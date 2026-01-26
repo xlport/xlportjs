@@ -11,18 +11,25 @@ import FormData from 'form-data'
 import { localImport } from './local-import'
 
 export type ClientOptions = {
+  /**
+   * URL of the xlPort server.
+   * @default 'https://xlport.compute.molnify.com'
+   */
   url?: string
+
   /**
    * API key for xlport server authentication.
    * Required unless localOnly is true.
    */
   apiKey?: string
+
   /**
    * Enable local fallback using ExcelJS when the xlport server cannot be reached.
    * Useful for sandboxed environments without network access.
    * @default true
    */
   localFallback?: boolean
+
   /**
    * Skip the xlport server entirely and use local parsing only.
    * When true, the apiKey is not required.
