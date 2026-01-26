@@ -454,9 +454,17 @@ describe('Local Import (ExcelJS fallback)', () => {
 
         // Compare calculated column values (with rounding for floating point)
         for (let i = 0; i < localInitiatives.length; i++) {
-          const localCalc = round(localInitiatives[i]['Calculated column'], 6)
-          const expectedCalc = round(expectedInitiatives[i]['Calculated column'], 6)
-          expect(localCalc).toBe(expectedCalc)
+          const localValue = localInitiatives[i]['Calculated column']
+          const expectedValue = expectedInitiatives[i]['Calculated column']
+
+          // If either side is null, compare directly to avoid coercing null to 0
+          if (localValue === null || expectedValue === null) {
+            expect(localValue).toBe(expectedValue)
+          } else {
+            const localCalc = round(localValue, 6)
+            const expectedCalc = round(expectedValue, 6)
+            expect(localCalc).toBe(expectedCalc)
+          }
         }
       }
     })
