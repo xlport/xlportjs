@@ -45,6 +45,7 @@ export async function localImport(
 /**
  * Extract defined names (named ranges) from the workbook.
  * These become properties in the output.
+ * Uses ExcelJS public forEach API to iterate over defined names.
  */
 function extractDefinedNames(
   workbook: ExcelJS.Workbook,
@@ -54,54 +55,45 @@ function extractDefinedNames(
   const properties: Record<string, Import.Property> = {}
   const sheetProperties: Record<string, Record<string, Primitives>> = {}
 
-  // Get all defined names from the workbook
-  const definedNames = (workbook as any).definedNames
-
-  if (!definedNames || !definedNames._matrixMap) {
+  // Use the public forEach API to iterate over defined names
+  // forEach callback receives: (name, range, sheetScope)
+  // range is an object with: { sheetName, address, col, row, '$col$row' }
+  // Note: ExcelJS TypeScript definitions don't match runtime behavior, so we use 'any'
+  const definedNames = workbook.definedNames as any
+  if (!definedNames || typeof definedNames.forEach !== 'function') {
     return properties
   }
 
-  // Iterate through defined names
-  for (const [name, matrix] of Object.entries(definedNames._matrixMap)) {
+  definedNames.forEach((name: string, range: DefinedNameRange, sheetScope: string | undefined) => {
     // Skip if not requested and not extracting all
     if (!extractAll && !requestedProperties.includes(name)) {
-      continue
+      return
     }
 
     // Skip table-related names (they start with _xlnm)
     if (name.startsWith('_xlnm')) {
-      continue
+      return
     }
 
-    const ranges = (matrix as any).getMatrix()
-    if (!ranges || Object.keys(ranges).length === 0) {
-      continue
+    // Get the cell value from the range
+    const worksheet = workbook.getWorksheet(range.sheetName)
+    if (!worksheet) {
+      return
     }
 
-    // Get the first (and typically only) reference
-    for (const [sheetId, sheetRanges] of Object.entries(ranges)) {
-      for (const [, rowRanges] of Object.entries(sheetRanges as any)) {
-        for (const [, cellRef] of Object.entries(rowRanges as any)) {
-          const refStr = cellRef as string
-          const value = getValueFromReference(workbook, refStr)
+    const cell = worksheet.getCell(range.row, range.col)
+    const value = getCellValue(cell)
 
-          // Check if this is a sheet-scoped name
-          const sheet = workbook.getWorksheet(parseInt(sheetId))
-          if (sheet && isSheetScopedName(definedNames, name, sheet.name)) {
-            if (!sheetProperties[sheet.name]) {
-              sheetProperties[sheet.name] = {}
-            }
-            sheetProperties[sheet.name][name] = value
-          } else {
-            properties[name] = value
-          }
-          break
-        }
-        break
+    // If sheetScope is defined, this is a sheet-scoped name
+    if (sheetScope) {
+      if (!sheetProperties[sheetScope]) {
+        sheetProperties[sheetScope] = {}
       }
-      break
+      sheetProperties[sheetScope][name] = value
+    } else {
+      properties[name] = value
     }
-  }
+  })
 
   // Merge sheet-specific properties
   for (const [sheetName, props] of Object.entries(sheetProperties)) {
@@ -112,36 +104,14 @@ function extractDefinedNames(
 }
 
 /**
- * Check if a defined name is sheet-scoped
+ * Type for the range object passed to definedNames.forEach callback
  */
-function isSheetScopedName(definedNames: any, name: string, sheetName: string): boolean {
-  // ExcelJS stores sheet-scoped names differently
-  // For simplicity, we'll check if there are multiple definitions with the same name
-  const refs = definedNames.getMatrix(name, sheetName)
-  return refs !== undefined
-}
-
-/**
- * Get value from a cell reference string
- */
-function getValueFromReference(workbook: ExcelJS.Workbook, refStr: string): Primitives {
-  // Parse reference like "Sheet1!$A$1" or "'Sheet Name'!$A$1"
-  const match = refStr.match(/^(?:'([^']+)'|([^!]+))!\$?([A-Z]+)\$?(\d+)(?::\$?[A-Z]+\$?\d+)?$/)
-  if (!match) {
-    return null
-  }
-
-  const sheetName = match[1] || match[2]
-  const col = match[3]
-  const row = parseInt(match[4])
-
-  const worksheet = workbook.getWorksheet(sheetName)
-  if (!worksheet) {
-    return null
-  }
-
-  const cell = worksheet.getCell(`${col}${row}`)
-  return getCellValue(cell)
+interface DefinedNameRange {
+  sheetName: string
+  address: string
+  col: number
+  row: number
+  '$col$row': string
 }
 
 /**
