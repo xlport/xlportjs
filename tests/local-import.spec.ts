@@ -1,4 +1,4 @@
-import { Client, localImport } from '../lib'
+import { Client, localImport, ClientOptions } from '../lib'
 import { readFileSync } from 'fs'
 
 // Helper to round numbers for comparison (handles floating point precision)
@@ -73,6 +73,30 @@ const compareRowsWithFormulaLeniency = (localRow: any, expectedRow: any, formula
 }
 
 describe('Local Import (ExcelJS fallback)', () => {
+  // Store client instances for cleanup
+  const clients: Client[] = []
+
+  // Helper to create and track client instances
+  const createClient = (options: ClientOptions) => {
+    const client = new Client(options)
+    clients.push(client)
+    return client
+  }
+
+  // Cleanup after all tests to prevent open handle warnings
+  afterAll(async () => {
+    // Clear any pending axios connections by removing interceptors and aborting
+    for (const client of clients) {
+      // Clear axios request/response interceptors
+      client.axios.interceptors.request.clear?.()
+      client.axios.interceptors.response.clear?.()
+    }
+    clients.length = 0
+
+    // Give time for any pending connections to close
+    await new Promise((resolve) => setTimeout(resolve, 100))
+  })
+
   describe('localImport function', () => {
     it('should extract tables from an Excel file with formal Excel tables', async () => {
       const fileBuffer = readFileSync('./tests/client/import/1table/workbook.xlsx')
@@ -198,12 +222,12 @@ describe('Local Import (ExcelJS fallback)', () => {
   describe('Client with localOnly option', () => {
     it('should allow creating a client without an API key when localOnly is true', () => {
       // apiKey is now optional when localOnly is true
-      const client = new Client({ localOnly: true })
+      const client = createClient({ localOnly: true })
       expect(client).toBeDefined()
     })
 
     it('should use local import when localOnly is true', async () => {
-      const client = new Client({ localOnly: true })
+      const client = createClient({ localOnly: true })
       const result = await client.importFromFile('./tests/client/import/1table/workbook.xlsx')
 
       expect(result.status).toBe('success')
@@ -214,7 +238,7 @@ describe('Local Import (ExcelJS fallback)', () => {
     })
 
     it('should work with a Buffer input in localOnly mode', async () => {
-      const client = new Client({ localOnly: true })
+      const client = createClient({ localOnly: true })
       const fileBuffer = readFileSync('./tests/client/import/1table/workbook.xlsx')
       const result = await client.importFromFile(fileBuffer)
 
@@ -228,7 +252,7 @@ describe('Local Import (ExcelJS fallback)', () => {
   describe('Client with localFallback option', () => {
     it('should fallback to local import when server returns network error', async () => {
       // Use a URL that will definitely fail with ECONNREFUSED
-      const client = new Client({
+      const client = createClient({
         apiKey: 'test-key',
         url: 'http://127.0.0.1:1', // Port 1 is typically not accessible
         localFallback: true,
@@ -244,7 +268,7 @@ describe('Local Import (ExcelJS fallback)', () => {
     }, 10000)
 
     it('should throw when server is unreachable and localFallback is disabled', async () => {
-      const client = new Client({
+      const client = createClient({
         apiKey: 'test-key',
         url: 'http://127.0.0.1:1',
         localFallback: false,
@@ -256,7 +280,7 @@ describe('Local Import (ExcelJS fallback)', () => {
 
     it('should have localFallback enabled by default', async () => {
       // Create client WITHOUT specifying localFallback - it should default to true
-      const client = new Client({
+      const client = createClient({
         apiKey: 'test-key',
         url: 'http://127.0.0.1:1', // Unreachable URL
         // localFallback not specified - should default to true
