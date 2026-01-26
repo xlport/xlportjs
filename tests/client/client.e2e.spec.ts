@@ -51,12 +51,27 @@ describe('Client', () => {
   dotenv.config({ path: './tests/client/.env' })
   const apiKey = process.env.XLPORT_APIKEY
 
+  // Store client instances for cleanup
+  const clients: Client[] = []
+
   const getClient = () => {
     if (!apiKey) {
       throw new Error('XLPORT_APIKEY not configured')
     }
-    return new Client({ apiKey })
+    const client = new Client({ apiKey })
+    clients.push(client)
+    return client
   }
+
+  // Cleanup after all tests to prevent open handle warnings
+  afterAll(async () => {
+    for (const client of clients) {
+      client.axios.interceptors.request.clear?.()
+      client.axios.interceptors.response.clear?.()
+    }
+    clients.length = 0
+    await new Promise((resolve) => setTimeout(resolve, 100))
+  })
 
   // Run e2e tests only when API key is available
   const describeWithApiKey = apiKey ? describe : describe.skip
