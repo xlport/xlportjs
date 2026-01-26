@@ -168,7 +168,8 @@ function extractTables(
         continue
       }
 
-      const tableData = extractTableData(worksheet, tableRef, tableName, tableInfo)
+      const requestedColumns = getRequestedColumns(tableName, requestedTables, extractAll)
+      const tableData = extractTableData(worksheet, tableRef, tableName, tableInfo, requestedColumns)
       if (tableData.length > 0) {
         tables[tableName] = tableData
       }
@@ -213,13 +214,44 @@ function isTableRequested(
 }
 
 /**
+ * Get the requested columns for a specific table.
+ * Returns null if all columns should be extracted.
+ */
+function getRequestedColumns(
+  tableName: string,
+  requestedTables: Import.Request['tables'],
+  extractAll: boolean,
+): string[] | null {
+  // If extracting all tables, return all columns
+  if (extractAll) return null
+  if (!requestedTables) return null
+
+  if (Array.isArray(requestedTables)) {
+    for (const tableSpec of requestedTables) {
+      if (typeof tableSpec === 'object' && tableName in tableSpec) {
+        const columns = tableSpec[tableName]
+        // If columns array is empty or contains '*', return all columns
+        if (columns.length === 0 || columns.includes('*')) {
+          return null
+        }
+        return columns
+      }
+    }
+  }
+
+  return null
+}
+
+/**
  * Extract data from an Excel table
+ * @param requestedColumns - If provided, only extract these columns. If null, extract all.
  */
 function extractTableData(
   worksheet: ExcelJS.Worksheet,
   tableRef: string,
   _tableName: string,
   tableInfo: any,
+  requestedColumns: string[] | null = null,
 ): Import.Table {
   const data: Import.Table = []
 
@@ -235,21 +267,26 @@ function extractTableData(
   const endCol = Number(endCell.col)
 
   // Get headers from the first row of the table
-  const headers: string[] = []
+  const allHeaders: string[] = []
   const columns = tableInfo.table?.columns || []
 
   if (columns.length > 0) {
     for (const col of columns) {
-      headers.push(col.name)
+      allHeaders.push(col.name)
     }
   } else {
     // Fall back to reading headers from the first row
     for (let col = startCol; col <= endCol; col++) {
       const cell = worksheet.getCell(startRow, col)
       const value = getCellValue(cell)
-      headers.push(value !== null ? String(value) : `Column${col}`)
+      allHeaders.push(value !== null ? String(value) : `Column${col}`)
     }
   }
+
+  // Determine which columns to include (filter by requestedColumns if specified)
+  const columnsToInclude = requestedColumns
+    ? allHeaders.filter((h) => requestedColumns.includes(h))
+    : allHeaders
 
   // Extract data rows (skip header row)
   for (let row = startRow + 1; row <= endRow; row++) {
@@ -257,8 +294,10 @@ function extractTableData(
     let hasData = false
 
     for (let col = startCol; col <= endCol; col++) {
-      const header = headers[col - startCol]
+      const header = allHeaders[col - startCol]
       if (!header) continue
+      // Skip columns not in the requested list
+      if (!columnsToInclude.includes(header)) continue
 
       const cell = worksheet.getCell(row, col)
       const value = getCellValue(cell)
@@ -383,16 +422,20 @@ function getCellValue(cell: ExcelJS.Cell): Primitives {
 
     // Hyperlink
     if ('hyperlink' in value) {
-      return (value as ExcelJS.CellHyperlinkValue).text || (value as ExcelJS.CellHyperlinkValue).hyperlink
+      const hyperlinkValue = value as ExcelJS.CellHyperlinkValue
+      return hyperlinkValue.text ?? hyperlinkValue.hyperlink ?? null
     }
 
     // Shared formula
     if ('sharedFormula' in value) {
       const result = (value as any).result
+      if (result === undefined) {
+        return null // No cached result for shared formula
+      }
       if (result instanceof Date) {
         return result.toISOString()
       }
-      return result as Primitives
+      return result as Primitives ?? null
     }
 
     // Error value

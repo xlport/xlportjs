@@ -1,4 +1,5 @@
-import { createReadStream, readFileSync } from 'fs'
+import { createReadStream } from 'fs'
+import { readFile } from 'fs/promises'
 // import https from 'https'
 
 import Axios, { AxiosInstance, AxiosError, toFormData } from 'axios'
@@ -11,7 +12,11 @@ import { localImport } from './local-import'
 
 export type ClientOptions = {
   url?: string
-  apiKey: string
+  /**
+   * API key for xlport server authentication.
+   * Required unless localOnly is true.
+   */
+  apiKey?: string
   /**
    * Enable local fallback using ExcelJS when the xlport server cannot be reached.
    * Useful for sandboxed environments without network access.
@@ -43,15 +48,22 @@ export const mimeTypes: MimeTypes = {
 }
 export type MimeTypes = Record<ExcelFileExtension, ExcelMimeType>
 
+type ResolvedClientOptions = {
+  url: string
+  apiKey: string
+  localFallback: boolean
+  localOnly: boolean
+}
+
 export class Client {
-  private config: Required<ClientOptions>
+  private config: ResolvedClientOptions
   private get authHeader() {
     return 'xlport apikey ' + this.config.apiKey
   }
   public axios: AxiosInstance
   constructor(config: ClientOptions) {
     const localOnly = config.localOnly ?? false
-    if (!localOnly && config.apiKey === undefined) throw Error('API Key is undefined')
+    if (!localOnly && !config.apiKey) throw Error('API Key is required when localOnly is false')
     this.config = {
       url: config.url ? config.url.replace(/\/$/, '') : 'https://xlport.compute.molnify.com',
       apiKey: config.apiKey ?? '',
@@ -78,11 +90,17 @@ export class Client {
     request: Import.Request = Import.defaultRequest,
     filename: string = 'file.xlsx',
   ): Promise<Import.Response> {
-    // Convert file path to buffer for local processing
-    const fileBuffer = typeof file === 'string' ? readFileSync(file) : file
+    // Helper to get file buffer only when needed (lazy loading)
+    const getFileBuffer = async (): Promise<Buffer> => {
+      if (typeof file === 'string') {
+        return readFile(file)
+      }
+      return file
+    }
 
     // If localOnly mode is enabled, skip the server entirely
     if (this.config.localOnly) {
+      const fileBuffer = await getFileBuffer()
       return localImport(fileBuffer, request)
     }
 
@@ -114,6 +132,7 @@ export class Client {
       // Check if this is a network error and fallback is enabled
       if (this.config.localFallback && this.isNetworkError(error)) {
         console.warn('xlport server unreachable, falling back to local ExcelJS import')
+        const fileBuffer = await getFileBuffer()
         return localImport(fileBuffer, request)
       }
       throw error
