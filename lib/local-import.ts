@@ -364,15 +364,21 @@ function getCellValue(cell: ExcelJS.Cell): Primitives {
     }
 
     // Formula result
-    if ('result' in value) {
-      const result = (value as ExcelJS.CellFormulaValue).result
-      if (result instanceof Date) {
-        return result.toISOString()
+    if ('formula' in value) {
+      const formulaValue = value as ExcelJS.CellFormulaValue
+      if ('result' in formulaValue && formulaValue.result !== undefined) {
+        const result = formulaValue.result
+        if (result instanceof Date) {
+          return result.toISOString()
+        }
+        if (typeof result === 'object' && result !== null && 'error' in result) {
+          return null // Return null for formula errors
+        }
+        return result as Primitives
       }
-      if (typeof result === 'object' && result !== null && 'error' in result) {
-        return null // Return null for formula errors
-      }
-      return result as Primitives
+      // Formula without cached result - return null
+      // Note: ExcelJS doesn't evaluate formulas, only reads cached results
+      return null
     }
 
     // Hyperlink
